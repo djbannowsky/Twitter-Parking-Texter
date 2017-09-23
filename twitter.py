@@ -1,8 +1,12 @@
 import time
-from time import strftime
+import smtplib
 import tweepy
 from twilio.rest import Client
 from config import keys
+
+EMAIL = keys['email']
+PASSWORD = keys['password']
+TO_EMAIL = keys['to_email']
 
 CONSUMER_KEY = keys['consumer_key']
 CONSUMER_SECRET = keys['consumer_secret']
@@ -12,8 +16,10 @@ USER_ID = keys['user_id']
 ACCOUNT_SID = keys['account_sid']
 AUTH_TOKEN = keys['auth_token']
 
-TWILIO_PHONE_NUMBER = keys['twilio_phone_number']
-CELL_PHONE_NUMBER = keys['cell_phone_number']
+mail = smtplib.SMTP('smtp.gmail.com', 587)
+mail.ehlo()
+mail.starttls()
+mail.login(EMAIL, PASSWORD)
 
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
@@ -30,19 +36,17 @@ class MyStreamListener(tweepy.StreamListener):
         try:
             print(status.text)
             if any(substring in status.text.lower() for substring in keywords):
-                client.messages.create(from_=TWILIO_PHONE_NUMBER,
-                                       to=CELL_PHONE_NUMBER,
-                                       body=strftime("%a %H:%M") + ' : ' + status.text)
+                mail.sendmail(EMAIL, TO_EMAIL, status.text)
+                mail.quit()
             return True
         except BaseException as e:
             print("Failed on_data :", str(e))
             time.sleep(5)
-
-    def on_error(self, status_code):
-        print(status_code)
 
 
 myStreamListener = MyStreamListener()
 myStream = tweepy.Stream(auth=api.auth, listener=myStreamListener)
 
 myStream.filter(async=True, follow=[USER_ID])
+
+
