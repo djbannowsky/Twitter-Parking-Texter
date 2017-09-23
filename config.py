@@ -6,6 +6,7 @@ keys = dict(
     user_id='',
     account_sid='',
     auth_token='',
-    twilio_phone_number='',
-    cell_phone_number=''
+    email='',
+    password='',
+    to_email=''
 )
